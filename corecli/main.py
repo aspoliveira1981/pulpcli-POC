@@ -1,48 +1,46 @@
-import click
-import coreapi
+import argcomplete
+import argparse
 import json
 
 
-
-DOCUMENT_PATH = '/home/vagrant/.coreapi/document.json'
-commands= ['repositories', 'tasks']
-
-
-@click.group(invoke_without_command=True, help='Command line client for interacting with CoreAPI services.\n\nVisit http://www.coreapi.org for more information.')
-@click.option('--version', is_flag=True, help='Display the package version number.')
-@click.pass_context
-def client(ctx, version):
-
-    if ctx.invoked_subcommand is not None:
-        return
+DOCUMENT_PATH = "/home/vagrant/.coreapi/document.json"
+commands = ["repositories", "tasks"]
 
 
-    click.echo(ctx.get_help())
+def client():
+    client = argparse.ArgumentParser()
+    with open(DOCUMENT_PATH) as doc:
+        doc = json.load(doc)
+        add_command(client, doc)
+    argcomplete.autocomplete(client)
+    client.parse_args()
 
 
-def add_command(parent_command, name, metadata):
+def add_command(parent_parser, metadata):
+    subparsers = parent_parser.add_subparsers()
 
-    if '_type' in metadata:
-        command = click.Command(name)
-    else:
-        command = click.Group(name)
-        for action, value in metadata.items():
-            #import ipdb; ipdb.set_trace()
-            add_command(command, action, value)
-    parent_command.add_command(command)
+    for action, value in metadata.items():
+        if "_" in action:
+            continue
+        if "_type" in value:
+            subparser = subparsers.add_parser(action)
 
-            #client.add_command(history)
-
-
-with open(DOCUMENT_PATH) as doc:
-    doc = json.load(doc)
-    for action, value in doc.items():
-        if not action.startswith('_'):
-            add_command(client, action, value)
-
-#for command in commands:
-#    add_command(command)
+        else:
+            subparser = subparsers.add_parser(action)
+            add_command(subparser, value)
 
 
-if __name__ == '__main__':
+class CoreCLIAction(argparse.Action):
+
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+
+        super(CoreCLIAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print("%r %r %r" % (namespace, values, option_string))
+
+        setattr(namespace, self.dest, values)
+
+
+if __name__ == "__main__":
     client()
