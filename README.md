@@ -14,7 +14,7 @@ This is a proof-of-concept intended to demonstrate an auto-generated Pulp 3 CLI.
 - Lookup via resource IDs or names
 - Help screens
 - Task polling
-- Autocompletion for commands and arguements
+- Autocompletion for commands and arguments
 - Extensibility
   - Support in the future to create our own complex commands/workflows
   - Users/plugin writers can create their own commands and ship their own cli plugins
